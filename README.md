@@ -76,11 +76,11 @@ After `POST /train/demo`, `trained` becomes `true` and segment distribution is r
 
 1. Uses synthetic data only; no production data integration yet.
 2. Uses in-memory model artifacts without persistence.
-3. No authentication or authorization layer in this MVP API.
+3. Supports API key and in-memory throttling controls, but no identity provider integration or role-based authorization.
 
 ## Next Roadmap
 
 1. Add persisted model registry and versioned artifacts.
-2. Add authentication and request-level authorization.
+2. Integrate managed identity provider and role-based access control.
 3. Add model drift checks and richer observability metrics.
 

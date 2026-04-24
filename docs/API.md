@@ -6,6 +6,8 @@ Base URL (local): `http://127.0.0.1:8010`
 
 Returns service readiness and model-training state.
 
+This endpoint is intentionally public and does not require API key auth.
+
 Example response:
 
 ```json
@@ -20,6 +22,11 @@ Example response:
 
 Trains in-memory model artifacts from synthetic records.
 
+Security behavior:
+
+1. Requires `X-API-Key` header when `API_KEY` is configured.
+2. Subject to in-memory request throttling using `RATE_LIMIT_MAX` and `RATE_LIMIT_WINDOW_SECONDS`.
+
 Query params:
 
 1. `samples` (default: `1500`)
@@ -29,6 +36,11 @@ Query params:
 
 Returns distribution of predicted segment IDs for synthetic sample records.
 
+Security behavior:
+
+1. Requires `X-API-Key` header when `API_KEY` is configured.
+2. Subject to in-memory request throttling.
+
 Query params:
 
 1. `limit` (default: `600`)
@@ -36,6 +48,11 @@ Query params:
 ## POST /predict/activity
 
 Predicts active vs low-activity class and confidence per record.
+
+Security behavior:
+
+1. Requires `X-API-Key` header when `API_KEY` is configured.
+2. Subject to in-memory request throttling.
 
 Request body:
 
@@ -58,7 +75,14 @@ Request body:
 
 Returns normalized anomaly score (`0.0` to `1.0`) per record using nearest segment-centroid distance.
 
+Security behavior:
+
+1. Requires `X-API-Key` header when `API_KEY` is configured.
+2. Subject to in-memory request throttling.
+
 ## Error Responses
 
 1. `400`: model artifacts not trained yet.
 2. `422`: request schema or feature column validation errors.
+3. `401`: missing/invalid API key when auth is enabled.
+4. `429`: request rate limit exceeded.
