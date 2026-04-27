@@ -9,9 +9,14 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: credit-card-usage-analysis-prediction-release-${{ github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
   verify-and-release:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -20,7 +25,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           cache: "pip"
 
       - name: Install dependencies
@@ -28,10 +33,41 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Compile check
+        run: python -m compileall -q api src tests
+
+      - name: Dependency consistency
+        run: python -m pip check
+
       - name: Run tests
-        run: pytest -q
+        run: pytest -q --maxfail=1
+
+      - name: Run API smoke check
+        run: |
+          uvicorn api.main:app --host 127.0.0.1 --port 8011 &
+          APP_PID=$!
+          trap "kill $APP_PID" EXIT
+
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:8011/health >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+
+          curl -fsS http://127.0.0.1:8011/health
+
+      - name: Dependency audit
+        run: |
+          python -m pip install --upgrade pip-audit
+          pip-audit -r requirements.txt --progress-spinner off
+
+      - name: Package source artifact
+        run: tar -czf credit-card-usage-analysis-prediction-source-${{ github.ref_name }}.tgz --exclude=.git --exclude=.github .
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+          files: |
+            credit-card-usage-analysis-prediction-source-${{ github.ref_name }}.tgz
