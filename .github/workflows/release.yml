@@ -63,7 +63,8 @@ jobs:
           pip-audit -r requirements.txt --progress-spinner off
 
       - name: Package source artifact
-        run: tar -czf credit-card-usage-analysis-prediction-source-${{ github.ref_name }}.tgz --exclude=.git --exclude=.github .
+        run: tar -czf credit-card-usage-analysis-prediction-source-${{ github.ref_name
+          }}.tgz --exclude=.git --exclude=.github .
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
