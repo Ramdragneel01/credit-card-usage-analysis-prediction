@@ -49,13 +49,13 @@ jobs:
           trap "kill $APP_PID" EXIT
 
           for i in {1..20}; do
-            if curl -fsS http://127.0.0.1:8011/health >/dev/null; then
+            if curl -fsS http://127.0.0.1:8011/health/liveness >/dev/null; then
               break
             fi
             sleep 1
           done
 
-          curl -fsS http://127.0.0.1:8011/health
+          curl -fsS http://127.0.0.1:8011/health/liveness
 
       - name: Dependency audit
         run: |
