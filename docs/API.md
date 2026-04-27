@@ -4,7 +4,7 @@ Base URL (local): `http://127.0.0.1:8010`
 
 ## GET /health
 
-Returns service readiness and model-training state.
+Returns service runtime summary and model-training state.
 
 This endpoint is intentionally public and does not require API key auth.
 
@@ -13,10 +13,21 @@ Example response:
 ```json
 {
   "status": "ok",
+  "environment": "development",
   "trained": false,
+  "uptime_seconds": 12.74,
+  "docs_enabled": true,
   "feature_columns": ["avg_ticket", "monthly_txn_count", "online_ratio", "weekend_ratio", "category_entropy", "chargeback_ratio"]
 }
 ```
+
+## GET /health/liveness
+
+Lightweight liveness probe for orchestrators and load balancers.
+
+## GET /health/readiness
+
+Readiness probe. When `REQUIRE_MODEL_FOR_READINESS=true`, this endpoint returns `503` until `POST /train/demo` runs (or startup auto-training is enabled).
 
 ## POST /train/demo
 
@@ -71,6 +82,15 @@ Request body:
 }
 ```
 
+Feature constraints:
+
+1. `avg_ticket`: `> 0` and `<= 10000`
+2. `monthly_txn_count`: `>= 0` and `<= 100000`
+3. `online_ratio`: `0.0` to `1.0`
+4. `weekend_ratio`: `0.0` to `1.0`
+5. `category_entropy`: `0.0` to `10.0`
+6. `chargeback_ratio`: `0.0` to `1.0`
+
 ## POST /predict/anomaly
 
 Returns normalized anomaly score (`0.0` to `1.0`) per record using nearest segment-centroid distance.
@@ -82,7 +102,19 @@ Security behavior:
 
 ## Error Responses
 
-1. `400`: model artifacts not trained yet.
-2. `422`: request schema or feature column validation errors.
-3. `401`: missing/invalid API key when auth is enabled.
+1. `401`: missing/invalid API key when auth is enabled.
+2. `413`: request body exceeds `MAX_REQUEST_BYTES`.
+3. `422`: request schema or feature validation errors.
 4. `429`: request rate limit exceeded.
+5. `503`: model artifacts not trained yet (prediction and segment endpoints).
+
+## Transport Hardening
+
+All responses include baseline security and observability headers:
+
+1. `X-Request-ID`
+2. `X-Process-Time-Ms`
+3. `X-Content-Type-Options: nosniff`
+4. `X-Frame-Options: DENY`
+5. `Referrer-Policy: no-referrer`
+6. `Permissions-Policy: camera=(), geolocation=(), microphone=()`

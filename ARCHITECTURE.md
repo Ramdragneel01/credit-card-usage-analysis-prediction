@@ -12,21 +12,23 @@ This repository provides a lightweight ML inference API with deterministic demo 
 
 ## Runtime Flow
 
-1. API starts and exposes health endpoint.
+1. API starts with trusted-host, optional CORS, and response-hardening middleware.
 2. `POST /train/demo` generates synthetic records and trains models.
 3. Trained artifacts are held in memory.
 4. Prediction endpoints validate input and run feature transforms.
 
 ## Security and Validation
 
-1. Input payload shape is validated with Pydantic.
-2. Required feature checks reject malformed records.
-3. Batch payload size is bounded (`min_length=1`, `max_length=2000`) to reduce abuse risk.
+1. Input payload shape and feature ranges are validated with Pydantic.
+2. Optional API key and in-memory throttling protect non-health endpoints.
+3. Request body size is capped using `MAX_REQUEST_BYTES`.
+4. Security headers and request-tracing headers are added at middleware level.
+5. Trusted host filtering defends against host-header abuse.
 
 ## Accessibility and Operability
 
 1. Endpoint and deployment docs are plain-text and screen-reader friendly.
-2. `/health` exposes service readiness and model-training state.
+2. `/health/liveness` and `/health/readiness` support container orchestrator probes.
 
 ## Efficiency
 
