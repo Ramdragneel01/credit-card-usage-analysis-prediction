@@ -54,6 +54,35 @@ Container liveness check:
 curl http://127.0.0.1:8010/health/liveness
 ```
 
+## Kubernetes Deployment
+
+Apply deployment and service:
+
+```bash
+kubectl apply -f deploy/k8s/deployment.yaml
+```
+
+Create or update API key secret (PowerShell):
+
+```powershell
+$apiKey = (Get-Content .env.production | Where-Object { $_ -like 'API_KEY=*' } | ForEach-Object { $_.Split('=',2)[1] })
+kubectl create secret generic credit-card-usage-secrets --from-literal=API_KEY="$apiKey" --dry-run=client -o yaml | kubectl apply -f -
+```
+
+Probe wiring:
+
+1. `livenessProbe` uses `/health/liveness`.
+2. `readinessProbe` uses `/health/readiness`.
+3. `startupProbe` uses `/health/liveness`.
+
+Verify probes and rollout:
+
+```bash
+kubectl rollout status deployment/credit-card-usage-api
+kubectl get pods -l app=credit-card-usage-api
+kubectl describe pod -l app=credit-card-usage-api
+```
+
 ## Production Checklist
 
 1. Set `ENVIRONMENT=production`.
