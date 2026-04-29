@@ -29,7 +29,7 @@ docker build -t credit-card-usage-analysis-prediction:latest .
 docker run --rm -p 8010:8010 --env-file .env credit-card-usage-analysis-prediction:latest
 ```
 
-## Quality Gate (Local CI Equivalent)
+## Testing
 
 ```bash
 python -m pip install --upgrade pip
@@ -93,7 +93,7 @@ After `POST /train/demo`, `trained` becomes `true` and segment distribution is r
 2. Uses in-memory model artifacts without persistence.
 3. Uses in-memory throttling, which is per-process and should be replaced by shared-rate-limiting for horizontally scaled deployments.
 
-## Next Roadmap
+## Roadmap
 
 1. Add persisted model registry and versioned artifacts.
 2. Integrate managed identity provider and role-based access control.
